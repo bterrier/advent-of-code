@@ -1,1 +1,6 @@
-target/
+**/rust/*/target/
+**/cpp/*/CMakeCache.txt
+**/cpp/*/CMakeFiles/
+**/cpp/*/cmake_install.cmake
+**/cpp/*/Makefile
+**/cpp/*/aoc-*-*
