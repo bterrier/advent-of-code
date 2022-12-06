@@ -73,7 +73,6 @@ int main(int argc, char *argv[])
             initial.append(line);
         } else {
             auto split = line.split(' ');
-            qDebug() << split;
             int qty = split[1].toInt();
             int from = split[3].toInt();
             int to = split[5].toInt();
