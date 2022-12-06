@@ -4,3 +4,4 @@
 **/cpp/*/cmake_install.cmake
 **/cpp/*/Makefile
 **/cpp/*/aoc-*-*
+*.user
