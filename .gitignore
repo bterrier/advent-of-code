@@ -5,3 +5,10 @@
 **/cpp/*/Makefile
 **/cpp/*/aoc-*-*
 *.user
+build.ninja
+.*
+CMakeCache*
+cmake_install.cmake
+qtcsettings.cmake
+CMakeFiles
+*_autogen
