@@ -12,3 +12,6 @@ cmake_install.cmake
 qtcsettings.cmake
 CMakeFiles
 *_autogen
+*.exe
+*.pdb
+*.ilk
