@@ -1,17 +1,17 @@
 #include <algorithm>
-#include <ranges>
 #include <optional>
+#include <ranges>
 
 #include <QCoreApplication>
+#include <QDebug>
 #include <QFile>
 #include <QHash>
 #include <QList>
 #include <QMap>
 #include <QPoint>
+#include <QQueue>
 #include <QRegularExpression>
 #include <QSet>
-#include <QQueue>
-#include <QDebug>
 
 enum class Resource
 {
@@ -21,7 +21,8 @@ enum class Resource
 	Geode
 };
 
-static QDebug operator<<(QDebug debug, Resource r) {
+static QDebug operator<<(QDebug debug, Resource r)
+{
 
 	switch (r) {
 
@@ -45,33 +46,35 @@ static QDebug operator<<(QDebug debug, Resource r) {
 using Recipe = QMap<Resource, int>;
 using Costs = QMap<Resource, Recipe>;
 
-struct Blueprint {
+struct Blueprint
+{
 	int id;
 	Costs costs;
 };
 
 using Stocks = QHash<Resource, int>;
 
-struct State {
+struct State
+{
 	QHash<Resource, int> robots;
 	Stocks stocks;
 	QSet<Resource> blacklist;
-
 };
 
-struct Game {
-	explicit Game(const Costs &costs) :
-	    costs(costs)
+struct Game
+{
+	explicit Game(const Costs &costs)
+	    : costs(costs)
 	{
 		states.append(State{
-		                  {
-		                      {Resource::Ore, 1},
-		                  },
-		                  {},
-		              });
+		    {
+		        {Resource::Ore, 1},
+		    },
+		    {},
+		});
 
 		for (const auto &recipe : costs) {
-			for (auto it = recipe.constBegin() ; it != recipe.constEnd() ; ++it) {
+			for (auto it = recipe.constBegin(); it != recipe.constEnd(); ++it) {
 				maxes[it.key()] = qMax(maxes[it.key()], it.value());
 			}
 		}
@@ -82,16 +85,18 @@ struct Game {
 	int geod = 0;
 	int round = 0;
 
-	int hope(const State &state) const {
-		return state.stocks[Resource::Geode] + (32-round) / 2 *(2*state.robots[Resource::Geode] + (32-round) -1);
+	int hope(const State &state) const
+	{
+		return state.stocks[Resource::Geode] + (32 - round) / 2 * (2 * state.robots[Resource::Geode] + (32 - round) - 1);
 	}
-	void prune() {
+	void prune()
+	{
 		int max = 0;
 		for (const auto &state : std::as_const(states)) {
 			max = qMax(state.stocks[Resource::Geode], max);
 		}
 		geod = max;
-		auto [first, last] = std::ranges::remove_if(states, [max, this](State state)->bool{ return hope(state) < max; });
+		auto [first, last] = std::ranges::remove_if(states, [max, this](State state) -> bool { return hope(state) < max; });
 		states.erase(first, last);
 	}
 
@@ -99,8 +104,8 @@ struct Game {
 	{
 		Recipe recipe = costs[robotType];
 
-		for (auto it = recipe.constBegin() ; it != recipe.constEnd() ; ++it) {
-			if(stocks[it.key()] < it.value()) {
+		for (auto it = recipe.constBegin(); it != recipe.constEnd(); ++it) {
+			if (stocks[it.key()] < it.value()) {
 				return false;
 			}
 		}
@@ -108,23 +113,22 @@ struct Game {
 		return true;
 	}
 
-	void step() {
+	void step()
+	{
 		QList<State> newStates;
 		for (const auto &state : std::as_const(states)) {
 			auto usableStocks = state.stocks;
 			auto newStocks = state.stocks;
-			for (auto it = state.robots.constBegin() ; it != state.robots.constEnd() ; ++it)
-			{
+			for (auto it = state.robots.constBegin(); it != state.robots.constEnd(); ++it) {
 				if (it.value() > 0) {
 					newStocks[it.key()] += it.value();
 				}
 			}
 
-
 			auto newRobots = state.robots;
 			if (canBuild(Resource::Geode, usableStocks)) {
 				Recipe recipe = costs[Resource::Geode];
-				for (auto it = recipe.constBegin() ; it != recipe.constEnd() ; ++it) {
+				for (auto it = recipe.constBegin(); it != recipe.constEnd(); ++it) {
 					newStocks[it.key()] -= it.value();
 				}
 				newRobots[Resource::Geode] += 1;
@@ -133,7 +137,7 @@ struct Game {
 			}
 
 			State newState{newRobots, newStocks};
-			for (Resource r2 : { Resource::Clay, Resource::Obsidian,  Resource::Ore}) {
+			for (Resource r2 : {Resource::Clay, Resource::Obsidian, Resource::Ore}) {
 
 				if (canBuild(r2, usableStocks)) {
 					newState.blacklist.insert(r2);
@@ -141,9 +145,7 @@ struct Game {
 			}
 			newStates.append(newState);
 
-
-			for (Resource r : { Resource::Clay, Resource::Obsidian,  Resource::Ore})
-			{
+			for (Resource r : {Resource::Clay, Resource::Obsidian, Resource::Ore}) {
 				if (!canBuild(r, usableStocks))
 					continue;
 				if (newRobots[r] >= maxes[r])
@@ -151,11 +153,10 @@ struct Game {
 				if (state.blacklist.contains(r))
 					continue;
 
-				State newState{ newRobots, newStocks};
-
+				State newState{newRobots, newStocks};
 
 				Recipe recipe = costs[r];
-				for (auto it = recipe.constBegin() ; it != recipe.constEnd() ; ++it) {
+				for (auto it = recipe.constBegin(); it != recipe.constEnd(); ++it) {
 					newState.stocks[it.key()] -= it.value();
 				}
 
@@ -164,14 +165,14 @@ struct Game {
 			}
 		}
 
-
 		states = newStates;
 		++round;
 		prune();
 	}
 };
 
-void solve(const QString &filename) {
+void solve(const QString &filename)
+{
 	QFile file(filename);
 
 	if (!file.open(QFile::ReadOnly)) {
@@ -208,7 +209,7 @@ void solve(const QString &filename) {
 
 		Game game(bp.costs);
 
-		for (int i = 0 ; i < 24 ; ++i) {
+		for (int i = 0; i < 24; ++i) {
 			game.step();
 		}
 
@@ -220,7 +221,7 @@ void solve(const QString &filename) {
 		result += game.geod * bp.id;
 
 		if (bp.id <= 3) {
-			for (int i = 24 ; i < 32 ; ++i) {
+			for (int i = 24; i < 32; ++i) {
 				game.step();
 			}
 			result2 *= game.geod;
@@ -239,8 +240,3 @@ int main(int argc, char *argv[])
 
 	return 0;
 }
-
-
-
-
-
